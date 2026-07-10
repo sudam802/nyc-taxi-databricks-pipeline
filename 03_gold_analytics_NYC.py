@@ -32,6 +32,26 @@ silver_df.printSchema()
 
 # COMMAND ----------
 
+# DBTITLE 1,Drop Existing Gold Tables
+# Drop existing Gold tables to avoid schema conflicts
+tables_to_drop = [
+    'workspace.default.nyc_taxi_gold_daily_metrics',
+    'workspace.default.nyc_taxi_gold_hourly_metrics',
+    'workspace.default.nyc_taxi_gold_popular_routes',
+    'workspace.default.nyc_taxi_gold_weekend_comparison',
+    'workspace.default.nyc_taxi_gold_time_of_day',
+    'workspace.default.nyc_taxi_gold_vendor_metrics',
+    'workspace.default.nyc_taxi_gold_summary'
+]
+
+for table in tables_to_drop:
+    spark.sql(f"DROP TABLE IF EXISTS {table}")
+    print(f"Dropped: {table}")
+
+print("\nAll Gold tables dropped successfully!")
+
+# COMMAND ----------
+
 # DBTITLE 1,1. Daily Metrics
 # Daily aggregations
 daily_metrics = silver_df.groupBy(
@@ -41,7 +61,7 @@ daily_metrics = silver_df.groupBy(
     F.sum('total_amount').alias('total_revenue'),
     F.avg('fare_amount').alias('avg_fare'),
     F.avg('trip_distance').alias('avg_distance'),
-    F.avg('duration_minutes').alias('avg_duration_min')
+    F.avg('trip_duration_minutes').alias('avg_duration_min')
 ).orderBy('pickup_date')
 
 print("Daily metrics sample:")
@@ -160,7 +180,7 @@ summary = silver_df.agg(
     F.sum('total_amount').alias('total_revenue'),
     F.avg('fare_amount').alias('avg_fare'),
     F.avg('trip_distance').alias('avg_distance'),
-    F.avg('duration_minutes').alias('avg_duration'),
+    F.avg('trip_duration_minutes').alias('avg_duration'),
     F.avg('tip_amount').alias('avg_tip'),
     F.min('tpep_pickup_datetime').alias('earliest_trip'),
     F.max('tpep_pickup_datetime').alias('latest_trip')
